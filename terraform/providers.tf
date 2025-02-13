@@ -8,6 +8,10 @@ terraform {
       source  = "hashicorp/google-beta"
       version = ">=6.18.1"
     }
+    github = {
+      source  = "integrations/github"
+      version = ">=6.2.2"
+    }
   }
 }
 
@@ -19,4 +23,8 @@ provider "google" {
 provider "google-beta" {
   project = var.project_id
   region  = var.region
+}
+
+provider "github" {
+  token = var.github_token
 }

@@ -6,13 +6,13 @@ resource "google_cloudfunctions2_function" "function" {
 
   build_config {
     runtime     = var.python_version
-    entry_point = "${each.key}_api_handler"
+    entry_point = "print_${each.key}"
     source {
       repo_source {
         project_id  = var.project_id
-        repo_name   = "hubitat_terraform"
+        repo_name   = "qtymothy-hubitat_terraform"
         branch_name = "main"
-        dir         = "functions/${each.key}"
+        dir         = "${each.key}/"
       }
     }
   }
