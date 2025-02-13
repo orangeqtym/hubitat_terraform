@@ -43,3 +43,8 @@ variable "instance_names" {
 #    "database"
   ]
 }
+
+variable "github_token" {
+  type    = string
+  description = "create a new token with repo, admin:org permissions"
+}

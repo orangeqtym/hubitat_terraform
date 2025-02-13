@@ -1,0 +1,35 @@
+steps:
+  - name: 'python:3.12'
+    id: 'Install dependencies'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        pip install --upgrade pip
+        pip install -r functions/${_FUNCTION}/requirements.txt
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'Deploy function'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud functions deploy ${_FUNCTION}-api-function \
+          --entry-point ${_ENTRY_POINT} \
+          --runtime python312 \
+          --trigger-topic ${_TRIGGER_TOPIC} \
+          --service-account ${_SERVICE_ACCOUNT_EMAIL} \
+          --memory ${_MEMORY} \
+          --timeout ${_TIMEOUT} \
+          --region ${_REGION} \
+          --project ${_PROJECT_ID} \
+          --source functions/${_FUNCTION}
+
+substitutions:
+  _FUNCTION: '${_FUNCTION}'
+  _ENTRY_POINT: '${_ENTRY_POINT}'
+  _TRIGGER_TOPIC: '${_TRIGGER_TOPIC}'
+  _SERVICE_ACCOUNT_EMAIL: '${_SERVICE_ACCOUNT_EMAIL}'
+  _MEMORY: '${_MEMORY}'
+  _TIMEOUT: '${_TIMEOUT}'
+  _REGION: '${_REGION}'
+  _PROJECT_ID: '${_PROJECT_ID}'
