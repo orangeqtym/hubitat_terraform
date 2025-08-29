@@ -36,7 +36,9 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-# Ignore terraform environment file
+# Ignore environment files (contain sensitive API keys)
+.env
 terraform/.env
+*/.env
 
 .idea/

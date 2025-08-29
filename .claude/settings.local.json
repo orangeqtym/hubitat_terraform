@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(terraform:*)",
+      "Read(C:\\Users\\orang\\PycharmProjects\\HubitatApiPlayground/**)",
+      "Bash(docker build:*)",
+      "Bash(docker run:*)",
+      "Bash(curl:*)",
+      "Bash(docker stop:*)",
+      "Bash(docker rm:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
