@@ -37,14 +37,39 @@ variable "python_timeout" {
 variable "instance_names" {
   type    = list(string)
   default = [
-    "weather",
-#    "govee",
-#    "hubitat",
-#    "database"
+    "hubitat",
+    "weather", 
+    "govee",
+    "database",
+    "dashboard"
   ]
 }
 
 variable "github_token" {
   type    = string
   description = "create a new token with repo, admin:org permissions"
+}
+
+variable "service_port" {
+  default     = 8000
+  description = "Port for each service to run on inside containers"
+  type        = number
+}
+
+variable "base_port" {
+  default     = 8000
+  description = "Base port for external service access (incremented for each service)"
+  type        = number
+}
+
+variable "docker_subnet" {
+  default     = "172.20.0.0/16"
+  description = "Docker network subnet"
+  type        = string
+}
+
+variable "docker_gateway" {
+  default     = "172.20.0.1"
+  description = "Docker network gateway"
+  type        = string
 }
