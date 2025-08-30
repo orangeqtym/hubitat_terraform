@@ -150,7 +150,7 @@ jobs:
         # Start Nginx reverse proxy
         docker run -d --name nginx \
           --network hubitat-services \
-          -p 80:80 \
+          -p 8080:80 \
           --restart unless-stopped \
           hubitat_terraform_nginx:latest
           
@@ -172,7 +172,7 @@ jobs:
         fi
         
         # Check each service endpoint
-        services=("hubitat:8000" "weather:8001" "govee:8002" "database:8003" "dashboard:8004" "nginx:80")
+        services=("hubitat:8000" "weather:8001" "govee:8002" "database:8003" "dashboard:8004" "nginx:8080")
         
         for service_port in "${services[@]}"; do
           service=${service_port%%:*}
@@ -224,12 +224,13 @@ jobs:
       run: |
         echo "🎉 Deployment completed successfully!"
         echo ""
-        echo "📍 Clean URL Access (via Nginx Reverse Proxy):"
-        echo "   • Main Dashboard: http://your-server-ip/"
-        echo "   • Hubitat Hub:    http://your-server-ip/hubitat/"
-        echo "   • Weather API:    http://your-server-ip/weather/"
-        echo "   • Govee Sensors:  http://your-server-ip/govee/"
-        echo "   • Database API:   http://your-server-ip/database/"
+        echo "📍 Unified Access (Nginx Reverse Proxy on port 8080):"
+        echo "   • Meal Plan App:  http://your-server-ip:8080/ (proxied from port 80)"
+        echo "   • IoT Dashboard:  http://your-server-ip:8080/iot/"
+        echo "   • Hubitat Hub:    http://your-server-ip:8080/iot/hubitat/"
+        echo "   • Weather API:    http://your-server-ip:8080/iot/weather/"
+        echo "   • Govee Sensors:  http://your-server-ip:8080/iot/govee/"
+        echo "   • Database API:   http://your-server-ip:8080/iot/database/"
         echo ""
         echo "📍 Direct Service Endpoints (for debugging):"
         echo "   • Main Dashboard: http://localhost:8004"
