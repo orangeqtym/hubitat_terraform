@@ -88,7 +88,12 @@ jobs:
         # Start Hubitat service
         docker run -d --name hubitat \
           --network hubitat-services \
-          --env-file .env \
+          -e REDIS_HOST=${{ secrets.REDIS_HOST }} \
+          -e REDIS_PORT=${{ secrets.REDIS_PORT }} \
+          -e HUBITAT_IP=${{ secrets.HUBITAT_IP }} \
+          -e HUBITAT_ACCESS_TOKEN=${{ secrets.HUBITAT_ACCESS_TOKEN }} \
+          -e HUBITAT_APP_ID=${{ secrets.HUBITAT_APP_ID }} \
+          -e DATABASE_PATH=${{ secrets.DATABASE_PATH }} \
           -p 8000:8000 \
           --restart unless-stopped \
           hubitat_terraform_hubitat:latest
@@ -96,7 +101,13 @@ jobs:
         # Start Weather service  
         docker run -d --name weather \
           --network hubitat-services \
-          --env-file .env \
+          -e REDIS_HOST=${{ secrets.REDIS_HOST }} \
+          -e REDIS_PORT=${{ secrets.REDIS_PORT }} \
+          -e OPENWEATHERMAP_API_KEY=${{ secrets.OPENWEATHERMAP_API_KEY }} \
+          -e WEATHER_LAT=${{ secrets.WEATHER_LAT }} \
+          -e WEATHER_LON=${{ secrets.WEATHER_LON }} \
+          -e WEATHER_LOCATION=${{ secrets.WEATHER_LOCATION }} \
+          -e DATABASE_PATH=${{ secrets.DATABASE_PATH }} \
           -p 8001:8000 \
           --restart unless-stopped \
           hubitat_terraform_weather:latest
@@ -104,7 +115,12 @@ jobs:
         # Start Govee service
         docker run -d --name govee \
           --network hubitat-services \
-          --env-file .env \
+          -e REDIS_HOST=${{ secrets.REDIS_HOST }} \
+          -e REDIS_PORT=${{ secrets.REDIS_PORT }} \
+          -e GOVEE_API_KEY=${{ secrets.GOVEE_API_KEY }} \
+          -e GOVEE_SKU=${{ secrets.GOVEE_SKU }} \
+          -e GOVEE_DEVICE=${{ secrets.GOVEE_DEVICE }} \
+          -e DATABASE_PATH=${{ secrets.DATABASE_PATH }} \
           -p 8002:8000 \
           --restart unless-stopped \
           hubitat_terraform_govee:latest
@@ -112,7 +128,9 @@ jobs:
         # Start Database service
         docker run -d --name database \
           --network hubitat-services \
-          --env-file .env \
+          -e REDIS_HOST=${{ secrets.REDIS_HOST }} \
+          -e REDIS_PORT=${{ secrets.REDIS_PORT }} \
+          -e DATABASE_PATH=${{ secrets.DATABASE_PATH }} \
           -p 8003:8000 \
           --restart unless-stopped \
           hubitat_terraform_database:latest
@@ -120,7 +138,10 @@ jobs:
         # Start Dashboard service
         docker run -d --name dashboard \
           --network hubitat-services \
-          --env-file .env \
+          -e REDIS_HOST=${{ secrets.REDIS_HOST }} \
+          -e REDIS_PORT=${{ secrets.REDIS_PORT }} \
+          -e DATABASE_PATH=${{ secrets.DATABASE_PATH }} \
+          -e DASHBOARD_REFRESH_INTERVAL=${{ secrets.DASHBOARD_REFRESH_INTERVAL }} \
           -p 8004:8000 \
           --restart unless-stopped \
           hubitat_terraform_dashboard:latest
