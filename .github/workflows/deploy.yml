@@ -1,5 +1,4 @@
 name: Deploy IoT Infrastructure to Local Server
-# Updated with comprehensive health checks and sensor data validation
 
 on:
   push:
