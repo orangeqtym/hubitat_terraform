@@ -1,0 +1,15 @@
+<?xml version="1.0" standalone='no'?><!--*-nxml-*-->
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<service-group>
+  <name replace-wildcards="yes">Home Server - %h</name>
+  <service>
+    <type>_http._tcp</type>
+    <port>80</port>
+    <txt-record>path=/</txt-record>
+  </service>
+  <service>
+    <type>_iot._tcp</type>
+    <port>80</port>
+    <txt-record>path=/iot/</txt-record>
+  </service>
+</service-group>

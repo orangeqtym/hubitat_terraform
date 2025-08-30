@@ -150,9 +150,24 @@ jobs:
         # Start Nginx reverse proxy
         docker run -d --name nginx \
           --network hubitat-services \
-          -p 8080:80 \
+          -p 80:80 \
           --restart unless-stopped \
           hubitat_terraform_nginx:latest
+          
+    - name: Set up Avahi mDNS
+      run: |
+        echo "📡 Setting up mDNS hostname resolution..."
+        # Install avahi-daemon if not present
+        sudo apt-get update -qq && sudo apt-get install -y avahi-daemon avahi-utils
+        
+        # Copy service definition
+        sudo cp avahi/homeserver.service /etc/avahi/services/
+        
+        # Restart avahi to pick up new service
+        sudo systemctl restart avahi-daemon
+        sudo systemctl enable avahi-daemon
+        
+        echo "✅ mDNS configured - server accessible as homeserver.local"
           
     - name: Wait for services to start
       run: |
@@ -172,7 +187,7 @@ jobs:
         fi
         
         # Check each service endpoint
-        services=("hubitat:8000" "weather:8001" "govee:8002" "database:8003" "dashboard:8004" "nginx:8080")
+        services=("hubitat:8000" "weather:8001" "govee:8002" "database:8003" "dashboard:8004" "nginx:80")
         
         for service_port in "${services[@]}"; do
           service=${service_port%%:*}
@@ -224,13 +239,16 @@ jobs:
       run: |
         echo "🎉 Deployment completed successfully!"
         echo ""
-        echo "📍 Unified Access (Nginx Reverse Proxy on port 8080):"
-        echo "   • Meal Plan App:  http://your-server-ip:8080/ (proxied from port 80)"
-        echo "   • IoT Dashboard:  http://your-server-ip:8080/iot/"
-        echo "   • Hubitat Hub:    http://your-server-ip:8080/iot/hubitat/"
-        echo "   • Weather API:    http://your-server-ip:8080/iot/weather/"
-        echo "   • Govee Sensors:  http://your-server-ip:8080/iot/govee/"
-        echo "   • Database API:   http://your-server-ip:8080/iot/database/"
+        echo "📍 Clean Hostname Access (via mDNS):"
+        echo "   • Meal Plan App:  http://homeserver.local/ (move your app to port 8081)"
+        echo "   • IoT Dashboard:  http://homeserver.local/iot/"
+        echo "   • Hubitat Hub:    http://homeserver.local/iot/hubitat/"
+        echo "   • Weather API:    http://homeserver.local/iot/weather/"
+        echo "   • Govee Sensors:  http://homeserver.local/iot/govee/"
+        echo "   • Database API:   http://homeserver.local/iot/database/"
+        echo ""
+        echo "📍 Alternative IP Access:"
+        echo "   • All services:   http://your-server-ip/ (same paths as above)"
         echo ""
         echo "📍 Direct Service Endpoints (for debugging):"
         echo "   • Main Dashboard: http://localhost:8004"
