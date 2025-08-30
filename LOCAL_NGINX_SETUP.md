@@ -18,7 +18,7 @@ sudo nano /etc/nginx/sites-available/local-services
 Add this configuration:
 
 ```nginx
-# IoT Dashboard - main entry point
+# IoT Dashboard - main entry point (allocated port 8014)
 server {
     listen 80;
     server_name iot.matilda.local;
@@ -32,7 +32,7 @@ server {
     }
 }
 
-# Weather API
+# Weather API (allocated port 8011)
 server {
     listen 80;
     server_name weather.matilda.local;
@@ -46,7 +46,7 @@ server {
     }
 }
 
-# Hubitat Hub
+# Hubitat Hub (allocated port 8010)
 server {
     listen 80;
     server_name hubitat.matilda.local;
@@ -60,7 +60,7 @@ server {
     }
 }
 
-# Govee Sensors
+# Govee Sensors (allocated port 8012)
 server {
     listen 80;
     server_name govee.matilda.local;
@@ -74,7 +74,7 @@ server {
     }
 }
 
-# Database API
+# Database API (allocated port 8013)
 server {
     listen 80;
     server_name database.matilda.local;
