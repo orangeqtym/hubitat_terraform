@@ -52,8 +52,8 @@ jobs:
     - name: Stop existing services
       run: |
         echo "🛑 Stopping existing services..."
-        docker stop hubitat weather govee database dashboard || true
-        docker rm hubitat weather govee database dashboard || true
+        docker stop hubitat weather govee database dashboard nginx || true
+        docker rm hubitat weather govee database dashboard nginx || true
         
     - name: Build updated Docker images
       run: |
@@ -63,6 +63,7 @@ jobs:
         docker build -t hubitat_terraform_govee:latest govee/
         docker build -t hubitat_terraform_database:latest database/
         docker build -t hubitat_terraform_dashboard:latest dashboard/
+        docker build -t hubitat_terraform_nginx:latest nginx/
         
     - name: Ensure Docker network exists
       run: |
@@ -146,6 +147,13 @@ jobs:
           --restart unless-stopped \
           hubitat_terraform_dashboard:latest
           
+        # Start Nginx reverse proxy
+        docker run -d --name nginx \
+          --network hubitat-services \
+          -p 80:80 \
+          --restart unless-stopped \
+          hubitat_terraform_nginx:latest
+          
     - name: Wait for services to start
       run: |
         echo "⏱️ Waiting for services to initialize..."
@@ -164,7 +172,7 @@ jobs:
         fi
         
         # Check each service endpoint
-        services=("hubitat:8000" "weather:8001" "govee:8002" "database:8003" "dashboard:8004")
+        services=("hubitat:8000" "weather:8001" "govee:8002" "database:8003" "dashboard:8004" "nginx:80")
         
         for service_port in "${services[@]}"; do
           service=${service_port%%:*}
@@ -216,9 +224,15 @@ jobs:
       run: |
         echo "🎉 Deployment completed successfully!"
         echo ""
-        echo "📍 Service Endpoints:"
+        echo "📍 Clean URL Access (via Nginx Reverse Proxy):"
+        echo "   • Main Dashboard: http://your-server-ip/"
+        echo "   • Hubitat Hub:    http://your-server-ip/hubitat/"
+        echo "   • Weather API:    http://your-server-ip/weather/"
+        echo "   • Govee Sensors:  http://your-server-ip/govee/"
+        echo "   • Database API:   http://your-server-ip/database/"
+        echo ""
+        echo "📍 Direct Service Endpoints (for debugging):"
         echo "   • Main Dashboard: http://localhost:8004"
-        echo "   • Charts & Data:  http://localhost:8004/charts"
         echo "   • Hubitat Hub:    http://localhost:8000"
         echo "   • Weather API:    http://localhost:8001"
         echo "   • Govee Sensors:  http://localhost:8002"
