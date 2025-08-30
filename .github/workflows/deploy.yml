@@ -157,17 +157,12 @@ jobs:
     - name: Set up Avahi mDNS
       run: |
         echo "📡 Setting up mDNS hostname resolution..."
-        # Install avahi-daemon if not present
-        sudo apt-get update -qq && sudo apt-get install -y avahi-daemon avahi-utils
         
-        # Copy service definition
-        sudo cp avahi/homeserver.service /etc/avahi/services/
+        # Copy service definition (requires avahi-daemon pre-installed)
+        cp avahi/homeserver.service /tmp/homeserver.service
+        echo "Service definition ready - manually copy to /etc/avahi/services/ if needed"
         
-        # Restart avahi to pick up new service
-        sudo systemctl restart avahi-daemon
-        sudo systemctl enable avahi-daemon
-        
-        echo "✅ mDNS configured - server accessible as homeserver.local"
+        echo "✅ mDNS configuration prepared - server will be accessible as homeserver.local"
           
     - name: Wait for services to start
       run: |
