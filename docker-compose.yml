@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --bind 0.0.0.0 --protected-mode no
+    networks:
+      - hubitat-services
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  hubitat:
+    build: ./hubitat/
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - hubitat-services
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - HUBITAT_IP=${HUBITAT_IP}
+      - HUBITAT_ACCESS_TOKEN=${HUBITAT_ACCESS_TOKEN}
+      - HUBITAT_APP_ID=${HUBITAT_APP_ID}
+      - DATABASE_PATH=${DATABASE_PATH}
+    ports:
+      - "8000:8000"  # Default ports - override locally
+    restart: unless-stopped
+
+  weather:
+    build: ./weather/
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - hubitat-services
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - OPENWEATHERMAP_API_KEY=${OPENWEATHERMAP_API_KEY}
+      - WEATHER_LAT=${WEATHER_LAT}
+      - WEATHER_LON=${WEATHER_LON}
+      - WEATHER_LOCATION=${WEATHER_LOCATION}
+      - DATABASE_PATH=${DATABASE_PATH}
+    ports:
+      - "8001:8000"
+    restart: unless-stopped
+
+  govee:
+    build: ./govee/
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - hubitat-services
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - GOVEE_API_KEY=${GOVEE_API_KEY}
+      - GOVEE_SKU=${GOVEE_SKU}
+      - GOVEE_DEVICE=${GOVEE_DEVICE}
+      - DATABASE_PATH=${DATABASE_PATH}
+    ports:
+      - "8002:8000"
+    restart: unless-stopped
+
+  database:
+    build: ./database/
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - hubitat-services
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DATABASE_PATH=${DATABASE_PATH}
+    ports:
+      - "8003:8000"
+    restart: unless-stopped
+
+  dashboard:
+    build: ./dashboard/
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - hubitat-services
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DATABASE_PATH=${DATABASE_PATH}
+      - DASHBOARD_REFRESH_INTERVAL=${DASHBOARD_REFRESH_INTERVAL}
+    ports:
+      - "8004:8000"
+    restart: unless-stopped
+
+networks:
+  hubitat-services:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  redis-data:

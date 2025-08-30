@@ -41,4 +41,7 @@ terraform.rc
 terraform/.env
 */.env
 
+# Local Docker Compose overrides (server-specific port mappings)
+docker-compose.override.yml
+
 .idea/

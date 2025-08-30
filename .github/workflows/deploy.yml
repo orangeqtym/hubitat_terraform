@@ -49,103 +49,37 @@ jobs:
         echo "Current branch: $GITHUB_REF"
         echo "Commit SHA: $GITHUB_SHA"
         
-    - name: Stop existing services
+    - name: Set up environment variables
       run: |
-        echo "🛑 Stopping existing services..."
-        docker stop hubitat weather govee database dashboard || true
-        docker rm hubitat weather govee database dashboard || true
+        echo "🔧 Setting up environment variables for deployment..."
+        cat > .env << EOF
+        REDIS_HOST=${{ secrets.REDIS_HOST }}
+        REDIS_PORT=${{ secrets.REDIS_PORT }}
+        HUBITAT_IP=${{ secrets.HUBITAT_IP }}
+        HUBITAT_ACCESS_TOKEN=${{ secrets.HUBITAT_ACCESS_TOKEN }}
+        HUBITAT_APP_ID=${{ secrets.HUBITAT_APP_ID }}
+        OPENWEATHERMAP_API_KEY=${{ secrets.OPENWEATHERMAP_API_KEY }}
+        WEATHER_LAT=${{ secrets.WEATHER_LAT }}
+        WEATHER_LON=${{ secrets.WEATHER_LON }}
+        WEATHER_LOCATION=${{ secrets.WEATHER_LOCATION }}
+        GOVEE_API_KEY=${{ secrets.GOVEE_API_KEY }}
+        GOVEE_SKU=${{ secrets.GOVEE_SKU }}
+        GOVEE_DEVICE=${{ secrets.GOVEE_DEVICE }}
+        DATABASE_PATH=${{ secrets.DATABASE_PATH }}
+        DASHBOARD_REFRESH_INTERVAL=${{ secrets.DASHBOARD_REFRESH_INTERVAL }}
+        EOF
         
-    - name: Build updated Docker images
+    - name: Deploy with Docker Compose
       run: |
-        echo "🔨 Building updated service images..."
-        docker build -t hubitat_terraform_hubitat:latest hubitat/
-        docker build -t hubitat_terraform_weather:latest weather/
-        docker build -t hubitat_terraform_govee:latest govee/
-        docker build -t hubitat_terraform_database:latest database/
-        docker build -t hubitat_terraform_dashboard:latest dashboard/
+        echo "🚀 Deploying IoT services with Docker Compose..."
         
-    - name: Ensure Docker network exists
-      run: |
-        echo "🌐 Setting up Docker network..."
-        docker network create hubitat-services --subnet=172.20.0.0/16 || echo "Network already exists"
+        # Stop existing services
+        docker-compose down || true
         
-    - name: Start Redis service
-      run: |
-        echo "🔴 Starting Redis message broker..."
-        docker stop redis || true
-        docker rm redis || true
-        docker run -d --name redis \
-          --network hubitat-services \
-          --ip 172.20.0.10 \
-          -p 6379:6379 \
-          --restart unless-stopped \
-          redis:7-alpine redis-server --appendonly yes --bind 0.0.0.0 --protected-mode no
-          
-    - name: Start all services
-      run: |
-        echo "🚀 Starting all IoT services..."
+        # Build and start services
+        docker-compose up -d --build
         
-        # Start Hubitat service
-        docker run -d --name hubitat \
-          --network hubitat-services \
-          -e REDIS_HOST=${{ secrets.REDIS_HOST }} \
-          -e REDIS_PORT=${{ secrets.REDIS_PORT }} \
-          -e HUBITAT_IP=${{ secrets.HUBITAT_IP }} \
-          -e HUBITAT_ACCESS_TOKEN=${{ secrets.HUBITAT_ACCESS_TOKEN }} \
-          -e HUBITAT_APP_ID=${{ secrets.HUBITAT_APP_ID }} \
-          -e DATABASE_PATH=${{ secrets.DATABASE_PATH }} \
-          -p 8000:8000 \
-          --restart unless-stopped \
-          hubitat_terraform_hubitat:latest
-          
-        # Start Weather service  
-        docker run -d --name weather \
-          --network hubitat-services \
-          -e REDIS_HOST=${{ secrets.REDIS_HOST }} \
-          -e REDIS_PORT=${{ secrets.REDIS_PORT }} \
-          -e OPENWEATHERMAP_API_KEY=${{ secrets.OPENWEATHERMAP_API_KEY }} \
-          -e WEATHER_LAT=${{ secrets.WEATHER_LAT }} \
-          -e WEATHER_LON=${{ secrets.WEATHER_LON }} \
-          -e WEATHER_LOCATION=${{ secrets.WEATHER_LOCATION }} \
-          -e DATABASE_PATH=${{ secrets.DATABASE_PATH }} \
-          -p 8001:8000 \
-          --restart unless-stopped \
-          hubitat_terraform_weather:latest
-          
-        # Start Govee service
-        docker run -d --name govee \
-          --network hubitat-services \
-          -e REDIS_HOST=${{ secrets.REDIS_HOST }} \
-          -e REDIS_PORT=${{ secrets.REDIS_PORT }} \
-          -e GOVEE_API_KEY=${{ secrets.GOVEE_API_KEY }} \
-          -e GOVEE_SKU=${{ secrets.GOVEE_SKU }} \
-          -e GOVEE_DEVICE=${{ secrets.GOVEE_DEVICE }} \
-          -e DATABASE_PATH=${{ secrets.DATABASE_PATH }} \
-          -p 8002:8000 \
-          --restart unless-stopped \
-          hubitat_terraform_govee:latest
-          
-        # Start Database service
-        docker run -d --name database \
-          --network hubitat-services \
-          -e REDIS_HOST=${{ secrets.REDIS_HOST }} \
-          -e REDIS_PORT=${{ secrets.REDIS_PORT }} \
-          -e DATABASE_PATH=${{ secrets.DATABASE_PATH }} \
-          -p 8003:8000 \
-          --restart unless-stopped \
-          hubitat_terraform_database:latest
-          
-        # Start Dashboard service
-        docker run -d --name dashboard \
-          --network hubitat-services \
-          -e REDIS_HOST=${{ secrets.REDIS_HOST }} \
-          -e REDIS_PORT=${{ secrets.REDIS_PORT }} \
-          -e DATABASE_PATH=${{ secrets.DATABASE_PATH }} \
-          -e DASHBOARD_REFRESH_INTERVAL=${{ secrets.DASHBOARD_REFRESH_INTERVAL }} \
-          -p 8004:8000 \
-          --restart unless-stopped \
-          hubitat_terraform_dashboard:latest
-          
+        echo "✅ All services deployed with allocated port ranges"
     - name: Set up Avahi mDNS
       run: |
         echo "📡 Setting up mDNS hostname resolution..."
@@ -174,7 +108,7 @@ jobs:
         fi
         
         # Check each service endpoint
-        services=("hubitat:8000" "weather:8001" "govee:8002" "database:8003" "dashboard:8004")
+        services=("hubitat:8010" "weather:8011" "govee:8012" "database:8013" "dashboard:8014")
         
         for service_port in "${services[@]}"; do
           service=${service_port%%:*}
@@ -226,27 +160,26 @@ jobs:
       run: |
         echo "🎉 Deployment completed successfully!"
         echo ""
-        echo "📍 Clean Hostname Access (via mDNS):"
-        echo "   • IoT Dashboard:  http://homeserver.local:8004/"
-        echo "   • Hubitat Hub:    http://homeserver.local:8000/"
-        echo "   • Weather API:    http://homeserver.local:8001/"
-        echo "   • Govee Sensors:  http://homeserver.local:8002/"
-        echo "   • Database API:   http://homeserver.local:8003/"
-        echo "   • Meal Plan App:  http://homeserver.local/ (your existing app on port 80)"
+        echo "📍 Allocated Port Range (8010-8019 for IoT project):"
+        echo "   • IoT Dashboard:  http://matilda.local:8014/"
+        echo "   • Hubitat Hub:    http://matilda.local:8010/"
+        echo "   • Weather API:    http://matilda.local:8011/"
+        echo "   • Govee Sensors:  http://matilda.local:8012/"
+        echo "   • Database API:   http://matilda.local:8013/"
         echo ""
-        echo "📍 Alternative IP Access:"
-        echo "   • IoT Dashboard:  http://your-server-ip:8004/"
-        echo "   • Hubitat Hub:    http://your-server-ip:8000/"
-        echo "   • Weather API:    http://your-server-ip:8001/"
-        echo "   • Govee Sensors:  http://your-server-ip:8002/"
-        echo "   • Database API:   http://your-server-ip:8003/"
+        echo "📍 Next: Set up local nginx proxy for clean URLs (no ports):"
+        echo "   • iot.matilda.local → :8014"
+        echo "   • weather.matilda.local → :8011"
+        echo "   • hubitat.matilda.local → :8010"
+        echo ""
+        echo "   • Meal Plan App:  http://matilda.local/ (your existing app on port 80)"
         echo ""
         echo "📍 Direct Service Endpoints (for debugging):"
-        echo "   • Main Dashboard: http://localhost:8004"
-        echo "   • Hubitat Hub:    http://localhost:8000"
-        echo "   • Weather API:    http://localhost:8001"
-        echo "   • Govee Sensors:  http://localhost:8002"
-        echo "   • Database API:   http://localhost:8003"
+        echo "   • Main Dashboard: http://localhost:8014"
+        echo "   • Hubitat Hub:    http://localhost:8010"
+        echo "   • Weather API:    http://localhost:8011"
+        echo "   • Govee Sensors:  http://localhost:8012"
+        echo "   • Database API:   http://localhost:8013"
         echo ""
         echo "📊 System Status:"
         docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
