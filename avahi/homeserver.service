@@ -3,13 +3,28 @@
 <service-group>
   <name replace-wildcards="yes">Home Server - %h</name>
   <service>
-    <type>_http._tcp</type>
-    <port>80</port>
-    <txt-record>path=/</txt-record>
+    <type>_iot-dashboard._tcp</type>
+    <port>8004</port>
+    <txt-record>path=IoT Dashboard</txt-record>
   </service>
   <service>
-    <type>_iot._tcp</type>
-    <port>80</port>
-    <txt-record>path=/iot/</txt-record>
+    <type>_hubitat._tcp</type>
+    <port>8000</port>
+    <txt-record>path=Hubitat Hub</txt-record>
+  </service>
+  <service>
+    <type>_weather._tcp</type>
+    <port>8001</port>
+    <txt-record>path=Weather API</txt-record>
+  </service>
+  <service>
+    <type>_govee._tcp</type>
+    <port>8002</port>
+    <txt-record>path=Govee Sensors</txt-record>
+  </service>
+  <service>
+    <type>_database._tcp</type>
+    <port>8003</port>
+    <txt-record>path=Database API</txt-record>
   </service>
 </service-group>

@@ -52,8 +52,8 @@ jobs:
     - name: Stop existing services
       run: |
         echo "🛑 Stopping existing services..."
-        docker stop hubitat weather govee database dashboard nginx || true
-        docker rm hubitat weather govee database dashboard nginx || true
+        docker stop hubitat weather govee database dashboard || true
+        docker rm hubitat weather govee database dashboard || true
         
     - name: Build updated Docker images
       run: |
@@ -63,7 +63,6 @@ jobs:
         docker build -t hubitat_terraform_govee:latest govee/
         docker build -t hubitat_terraform_database:latest database/
         docker build -t hubitat_terraform_dashboard:latest dashboard/
-        docker build -t hubitat_terraform_nginx:latest nginx/
         
     - name: Ensure Docker network exists
       run: |
@@ -147,13 +146,6 @@ jobs:
           --restart unless-stopped \
           hubitat_terraform_dashboard:latest
           
-        # Start Nginx reverse proxy
-        docker run -d --name nginx \
-          --network hubitat-services \
-          -p 80:80 \
-          --restart unless-stopped \
-          hubitat_terraform_nginx:latest
-          
     - name: Set up Avahi mDNS
       run: |
         echo "📡 Setting up mDNS hostname resolution..."
@@ -182,7 +174,7 @@ jobs:
         fi
         
         # Check each service endpoint
-        services=("hubitat:8000" "weather:8001" "govee:8002" "database:8003" "dashboard:8004" "nginx:80")
+        services=("hubitat:8000" "weather:8001" "govee:8002" "database:8003" "dashboard:8004")
         
         for service_port in "${services[@]}"; do
           service=${service_port%%:*}
@@ -235,15 +227,19 @@ jobs:
         echo "🎉 Deployment completed successfully!"
         echo ""
         echo "📍 Clean Hostname Access (via mDNS):"
-        echo "   • Meal Plan App:  http://homeserver.local/ (move your app to port 8081)"
-        echo "   • IoT Dashboard:  http://homeserver.local/iot/"
-        echo "   • Hubitat Hub:    http://homeserver.local/iot/hubitat/"
-        echo "   • Weather API:    http://homeserver.local/iot/weather/"
-        echo "   • Govee Sensors:  http://homeserver.local/iot/govee/"
-        echo "   • Database API:   http://homeserver.local/iot/database/"
+        echo "   • IoT Dashboard:  http://homeserver.local:8004/"
+        echo "   • Hubitat Hub:    http://homeserver.local:8000/"
+        echo "   • Weather API:    http://homeserver.local:8001/"
+        echo "   • Govee Sensors:  http://homeserver.local:8002/"
+        echo "   • Database API:   http://homeserver.local:8003/"
+        echo "   • Meal Plan App:  http://homeserver.local/ (your existing app on port 80)"
         echo ""
         echo "📍 Alternative IP Access:"
-        echo "   • All services:   http://your-server-ip/ (same paths as above)"
+        echo "   • IoT Dashboard:  http://your-server-ip:8004/"
+        echo "   • Hubitat Hub:    http://your-server-ip:8000/"
+        echo "   • Weather API:    http://your-server-ip:8001/"
+        echo "   • Govee Sensors:  http://your-server-ip:8002/"
+        echo "   • Database API:   http://your-server-ip:8003/"
         echo ""
         echo "📍 Direct Service Endpoints (for debugging):"
         echo "   • Main Dashboard: http://localhost:8004"
